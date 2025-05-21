@@ -1,0 +1,250 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 600px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 100%;
+                 height: 600px;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": 1, "label": "SGW_SCU_R_01", "shape": "dot"}, {"color": "#97c2fc", "id": 2, "label": "BCM_08", "shape": "dot"}, {"color": "#97c2fc", "id": 3, "label": "DiagReq_PAT", "shape": "dot"}, {"color": "#97c2fc", "id": 4, "label": "SGW_04", "shape": "dot"}, {"color": "#97c2fc", "id": 5, "label": "BCM_10", "shape": "dot"}, {"color": "#97c2fc", "id": 6, "label": "SGW_RemoteCmd_03", "shape": "dot"}, {"color": "#97c2fc", "id": 7, "label": "PRND", "shape": "dot"}, {"color": "#97c2fc", "id": 8, "label": "IBS_Status_01", "shape": "dot"}, {"color": "#97c2fc", "id": 9, "label": "SGW_DCM_01", "shape": "dot"}, {"color": "#97c2fc", "id": 10, "label": "SCUR_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 11, "label": "VCU_AccPedal", "shape": "dot"}, {"color": "#97c2fc", "id": 12, "label": "BMS_ErrorInfo", "shape": "dot"}, {"color": "#97c2fc", "id": 13, "label": "NM_DCM_FL", "shape": "dot"}, {"color": "#97c2fc", "id": 14, "label": "SGW_SteerWhPos", "shape": "dot"}, {"color": "#97c2fc", "id": 15, "label": "DiagResp_PAT", "shape": "dot"}, {"color": "#97c2fc", "id": 16, "label": "BCM_Debug_02", "shape": "dot"}, {"color": "#97c2fc", "id": 17, "label": "DCM_FR", "shape": "dot"}, {"color": "#97c2fc", "id": 18, "label": "NM_ADCU", "shape": "dot"}, {"color": "#97c2fc", "id": 19, "label": "CGW_VIN1", "shape": "dot"}, {"color": "#97c2fc", "id": 20, "label": "BCM_11", "shape": "dot"}, {"color": "#97c2fc", "id": 21, "label": "SGW_BCM_01", "shape": "dot"}, {"color": "#97c2fc", "id": 22, "label": "WCBS_01", "shape": "dot"}, {"color": "#97c2fc", "id": 23, "label": "DiagResp_BCM1", "shape": "dot"}, {"color": "#97c2fc", "id": 24, "label": "DCM_RL_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 25, "label": "DCM_FL", "shape": "dot"}, {"color": "#97c2fc", "id": 26, "label": "DCM_ALM_FL", "shape": "dot"}, {"color": "#97c2fc", "id": 27, "label": "DiagReq_DCM_RR", "shape": "dot"}, {"color": "#97c2fc", "id": 28, "label": "WCBS1_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 29, "label": "PAT_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 30, "label": "DCM_RR_SDS_01", "shape": "dot"}, {"color": "#97c2fc", "id": 31, "label": "SGW_09", "shape": "dot"}, {"color": "#97c2fc", "id": 32, "label": "DiagReq_SCUL", "shape": "dot"}, {"color": "#97c2fc", "id": 33, "label": "SGW_Time", "shape": "dot"}, {"color": "#97c2fc", "id": 34, "label": "DCM_RR", "shape": "dot"}, {"color": "#97c2fc", "id": 35, "label": "HLL_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 36, "label": "IBS_Status_02", "shape": "dot"}, {"color": "#97c2fc", "id": 37, "label": "ADCU_Body_req", "shape": "dot"}, {"color": "#97c2fc", "id": 38, "label": "HLR_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 39, "label": "DiagReq_BCM2", "shape": "dot"}, {"color": "#97c2fc", "id": 40, "label": "SGW_08", "shape": "dot"}, {"color": "#97c2fc", "id": 41, "label": "SGW_03", "shape": "dot"}, {"color": "#97c2fc", "id": 42, "label": "DCM_RL", "shape": "dot"}, {"color": "#97c2fc", "id": 43, "label": "DCM_ALM_FR", "shape": "dot"}, {"color": "#97c2fc", "id": 44, "label": "NM_BCM", "shape": "dot"}, {"color": "#97c2fc", "id": 45, "label": "PAT_01", "shape": "dot"}, {"color": "#97c2fc", "id": 46, "label": "DiagResp_DCM_RR", "shape": "dot"}, {"color": "#97c2fc", "id": 47, "label": "MFP_FC", "shape": "dot"}, {"color": "#97c2fc", "id": 48, "label": "SCUL_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 49, "label": "DiagResp_DCM_FL", "shape": "dot"}, {"color": "#97c2fc", "id": 50, "label": "SGW_BCM_02", "shape": "dot"}, {"color": "#97c2fc", "id": 51, "label": "SGW_10", "shape": "dot"}, {"color": "#97c2fc", "id": 52, "label": "SGW_BCM_04", "shape": "dot"}, {"color": "#97c2fc", "id": 53, "label": "NM_SCU_R", "shape": "dot"}, {"color": "#97c2fc", "id": 54, "label": "SGW_02", "shape": "dot"}, {"color": "#97c2fc", "id": 55, "label": "NM_DCM_RR", "shape": "dot"}, {"color": "#97c2fc", "id": 56, "label": "DiagResp_WCBS1", "shape": "dot"}, {"color": "#97c2fc", "id": 57, "label": "SGW_BCM_03", "shape": "dot"}, {"color": "#97c2fc", "id": 58, "label": "SGW_RemoteCmd_01", "shape": "dot"}, {"color": "#97c2fc", "id": 59, "label": "DiagResp_SCUR", "shape": "dot"}, {"color": "#97c2fc", "id": 60, "label": "ACU_info", "shape": "dot"}, {"color": "#97c2fc", "id": 61, "label": "DiagReq_SCUR", "shape": "dot"}, {"color": "#97c2fc", "id": 62, "label": "CBM_request_01", "shape": "dot"}, {"color": "#97c2fc", "id": 63, "label": "CGW_01", "shape": "dot"}, {"color": "#97c2fc", "id": 64, "label": "DiagResp_HLR", "shape": "dot"}, {"color": "#97c2fc", "id": 65, "label": "Switches_01", "shape": "dot"}, {"color": "#97c2fc", "id": 66, "label": "BCM_Authentication", "shape": "dot"}, {"color": "#97c2fc", "id": 67, "label": "DiagReq_HLR", "shape": "dot"}, {"color": "#97c2fc", "id": 68, "label": "DCM_RL_SDS_01", "shape": "dot"}, {"color": "#97c2fc", "id": 69, "label": "BCM_Debug_01", "shape": "dot"}, {"color": "#97c2fc", "id": 70, "label": "CBM_13", "shape": "dot"}, {"color": "#97c2fc", "id": 71, "label": "SGW_05", "shape": "dot"}, {"color": "#97c2fc", "id": 72, "label": "SGW_SCU_L_01", "shape": "dot"}, {"color": "#97c2fc", "id": 73, "label": "DCM_FL_02", "shape": "dot"}, {"color": "#97c2fc", "id": 74, "label": "DiagReq_WCBS_02", "shape": "dot"}, {"color": "#97c2fc", "id": 75, "label": "NM_DCM_RL", "shape": "dot"}, {"color": "#97c2fc", "id": 76, "label": "DiagResp_WCBS2", "shape": "dot"}, {"color": "#97c2fc", "id": 77, "label": "DCM_ALM_RL", "shape": "dot"}, {"color": "#97c2fc", "id": 78, "label": "BMS_status_03", "shape": "dot"}, {"color": "#97c2fc", "id": 79, "label": "SGW_20", "shape": "dot"}, {"color": "#97c2fc", "id": 80, "label": "VCU_HMIsignals_01", "shape": "dot"}, {"color": "#97c2fc", "id": 81, "label": "NM_SCU_L", "shape": "dot"}, {"color": "#97c2fc", "id": 82, "label": "MFP_RC", "shape": "dot"}, {"color": "#97c2fc", "id": 83, "label": "VCU_02", "shape": "dot"}, {"color": "#97c2fc", "id": 84, "label": "DiagReq_DCM_FL", "shape": "dot"}, {"color": "#97c2fc", "id": 85, "label": "BCM_09", "shape": "dot"}, {"color": "#97c2fc", "id": 86, "label": "BCM_05", "shape": "dot"}, {"color": "#97c2fc", "id": 87, "label": "DiagReq_WCBS_01", "shape": "dot"}, {"color": "#97c2fc", "id": 88, "label": "SGW_16", "shape": "dot"}, {"color": "#97c2fc", "id": 89, "label": "WCBS_02", "shape": "dot"}, {"color": "#97c2fc", "id": 90, "label": "DiagReq_BCM1", "shape": "dot"}, {"color": "#97c2fc", "id": 91, "label": "BCM_06", "shape": "dot"}, {"color": "#97c2fc", "id": 92, "label": "VCU_MCU_03", "shape": "dot"}, {"color": "#97c2fc", "id": 93, "label": "SGW_07", "shape": "dot"}, {"color": "#97c2fc", "id": 94, "label": "NM_HLL", "shape": "dot"}, {"color": "#97c2fc", "id": 95, "label": "DCM_RR_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 96, "label": "DiagReq_ALL", "shape": "dot"}, {"color": "#97c2fc", "id": 97, "label": "BCM1_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 98, "label": "CGW_02", "shape": "dot"}, {"color": "#97c2fc", "id": 99, "label": "IVI_03", "shape": "dot"}, {"color": "#97c2fc", "id": 100, "label": "DiagResp_ADCU", "shape": "dot"}, {"color": "#97c2fc", "id": 101, "label": "CGW_VIN3VER", "shape": "dot"}, {"color": "#97c2fc", "id": 102, "label": "WCBS_1_Debug_01", "shape": "dot"}, {"color": "#97c2fc", "id": 103, "label": "IBS_Status_03", "shape": "dot"}, {"color": "#97c2fc", "id": 104, "label": "DiagReq_DCM_RL", "shape": "dot"}, {"color": "#97c2fc", "id": 105, "label": "DiagResp_HLL", "shape": "dot"}, {"color": "#97c2fc", "id": 106, "label": "BCM_ALM", "shape": "dot"}, {"color": "#97c2fc", "id": 107, "label": "WCBS2_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 108, "label": "DCM_FL_SDS_01", "shape": "dot"}, {"color": "#97c2fc", "id": 109, "label": "SGW_BCM_06", "shape": "dot"}, {"color": "#97c2fc", "id": 110, "label": "DiagReq_DCM_FR", "shape": "dot"}, {"color": "#97c2fc", "id": 111, "label": "WCBS_2_Debug_01", "shape": "dot"}, {"color": "#97c2fc", "id": 112, "label": "SGW_01", "shape": "dot"}, {"color": "#97c2fc", "id": 113, "label": "BMS_status_01", "shape": "dot"}, {"color": "#97c2fc", "id": 114, "label": "IVI_OdometerInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 115, "label": "SGW_18", "shape": "dot"}, {"color": "#97c2fc", "id": 116, "label": "ADCU_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 117, "label": "VCU_BMS", "shape": "dot"}, {"color": "#97c2fc", "id": 118, "label": "DCM_ALM_RR", "shape": "dot"}, {"color": "#97c2fc", "id": 119, "label": "BCM2_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 120, "label": "BCM_03", "shape": "dot"}, {"color": "#97c2fc", "id": 121, "label": "DiagResp_DCM_RL", "shape": "dot"}, {"color": "#97c2fc", "id": 122, "label": "DCM_FR_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 123, "label": "SGW_SCU_R_02", "shape": "dot"}, {"color": "#97c2fc", "id": 124, "label": "SGW_BCM_08", "shape": "dot"}, {"color": "#97c2fc", "id": 125, "label": "SGW_17", "shape": "dot"}, {"color": "#97c2fc", "id": 126, "label": "SGW_DCM_02", "shape": "dot"}, {"color": "#97c2fc", "id": 127, "label": "CGW_VIN2", "shape": "dot"}, {"color": "#97c2fc", "id": 128, "label": "BCM_02", "shape": "dot"}, {"color": "#97c2fc", "id": 129, "label": "NM_DCM_FR", "shape": "dot"}, {"color": "#97c2fc", "id": 130, "label": "DiagResp_BCM2", "shape": "dot"}, {"color": "#97c2fc", "id": 131, "label": "DCM_FR_SDS_01", "shape": "dot"}, {"color": "#97c2fc", "id": 132, "label": "BCM_SynReq_01", "shape": "dot"}, {"color": "#97c2fc", "id": 133, "label": "SGW_Req", "shape": "dot"}, {"color": "#97c2fc", "id": 134, "label": "DiagReq_FUN", "shape": "dot"}, {"color": "#97c2fc", "id": 135, "label": "DiagReq_BD", "shape": "dot"}, {"color": "#97c2fc", "id": 136, "label": "BCM_01", "shape": "dot"}, {"color": "#97c2fc", "id": 137, "label": "DCM_FL_DiagInfor", "shape": "dot"}, {"color": "#97c2fc", "id": 138, "label": "HLR", "shape": "dot"}, {"color": "#97c2fc", "id": 139, "label": "NM_CGW", "shape": "dot"}, {"color": "#97c2fc", "id": 140, "label": "DiagResp_DCM_FR", "shape": "dot"}, {"color": "#97c2fc", "id": 141, "label": "ADCU_APS_02", "shape": "dot"}, {"color": "#97c2fc", "id": 142, "label": "EPS_CONV", "shape": "dot"}, {"color": "#97c2fc", "id": 143, "label": "DiagReq_ADCU", "shape": "dot"}, {"color": "#97c2fc", "id": 144, "label": "HLL", "shape": "dot"}, {"color": "#97c2fc", "id": 145, "label": "SGW_BCM_07", "shape": "dot"}, {"color": "#97c2fc", "id": 146, "label": "DiagReq_HLL", "shape": "dot"}, {"color": "#97c2fc", "id": 147, "label": "DiagResp_SCUL", "shape": "dot"}, {"color": "#97c2fc", "id": 148, "label": "SCUR", "shape": "dot"}, {"color": "#97c2fc", "id": 149, "label": "NM_HLR", "shape": "dot"}, {"color": "#97c2fc", "id": 150, "label": "DCM_FR_02", "shape": "dot"}, {"color": "#97c2fc", "id": 151, "label": "BCM_04", "shape": "dot"}, {"color": "#97c2fc", "id": 152, "label": "SGW_FVSynchronization_01", "shape": "dot"}, {"color": "#97c2fc", "id": 153, "label": "SCUL", "shape": "dot"}]);
+                  edges = new vis.DataSet([{"from": 1, "to": 2}, {"from": 2, "to": 3}, {"from": 3, "to": 4}, {"from": 4, "to": 5}, {"from": 5, "to": 6}, {"from": 6, "to": 7}, {"from": 7, "to": 8}, {"from": 8, "to": 9}, {"from": 9, "to": 10}, {"from": 10, "to": 11}, {"from": 11, "to": 12}, {"from": 12, "to": 13}, {"from": 13, "to": 14}, {"from": 14, "to": 15}, {"from": 15, "to": 16}, {"from": 16, "to": 17}, {"from": 17, "to": 18}, {"from": 18, "to": 19}, {"from": 19, "to": 20}, {"from": 20, "to": 21}, {"from": 21, "to": 22}, {"from": 22, "to": 23}, {"from": 23, "to": 24}, {"from": 24, "to": 25}, {"from": 25, "to": 26}, {"from": 26, "to": 27}, {"from": 27, "to": 28}, {"from": 28, "to": 29}, {"from": 29, "to": 30}, {"from": 30, "to": 31}, {"from": 31, "to": 32}, {"from": 32, "to": 33}, {"from": 33, "to": 34}, {"from": 34, "to": 35}, {"from": 35, "to": 36}, {"from": 36, "to": 37}, {"from": 37, "to": 38}, {"from": 38, "to": 39}, {"from": 39, "to": 40}, {"from": 40, "to": 41}, {"from": 41, "to": 42}, {"from": 42, "to": 43}, {"from": 43, "to": 44}, {"from": 44, "to": 45}, {"from": 45, "to": 46}, {"from": 46, "to": 47}, {"from": 47, "to": 48}, {"from": 48, "to": 49}, {"from": 49, "to": 50}, {"from": 50, "to": 51}, {"from": 51, "to": 52}, {"from": 52, "to": 53}, {"from": 53, "to": 54}, {"from": 54, "to": 55}, {"from": 55, "to": 56}, {"from": 56, "to": 57}, {"from": 57, "to": 58}, {"from": 58, "to": 59}, {"from": 59, "to": 60}, {"from": 60, "to": 61}, {"from": 61, "to": 62}, {"from": 62, "to": 63}, {"from": 63, "to": 64}, {"from": 64, "to": 65}, {"from": 65, "to": 66}, {"from": 66, "to": 67}, {"from": 67, "to": 68}, {"from": 68, "to": 69}, {"from": 69, "to": 70}, {"from": 70, "to": 71}, {"from": 71, "to": 72}, {"from": 72, "to": 73}, {"from": 73, "to": 74}, {"from": 74, "to": 75}, {"from": 75, "to": 76}, {"from": 76, "to": 77}, {"from": 77, "to": 78}, {"from": 78, "to": 79}, {"from": 79, "to": 80}, {"from": 80, "to": 81}, {"from": 81, "to": 82}, {"from": 82, "to": 83}, {"from": 83, "to": 84}, {"from": 84, "to": 85}, {"from": 85, "to": 86}, {"from": 86, "to": 87}, {"from": 87, "to": 88}, {"from": 88, "to": 89}, {"from": 89, "to": 90}, {"from": 90, "to": 91}, {"from": 91, "to": 92}, {"from": 92, "to": 93}, {"from": 93, "to": 94}, {"from": 94, "to": 95}, {"from": 95, "to": 96}, {"from": 96, "to": 97}, {"from": 97, "to": 98}, {"from": 98, "to": 99}, {"from": 99, "to": 100}, {"from": 100, "to": 101}, {"from": 101, "to": 102}, {"from": 102, "to": 103}, {"from": 103, "to": 104}, {"from": 104, "to": 105}, {"from": 105, "to": 106}, {"from": 106, "to": 107}, {"from": 107, "to": 108}, {"from": 108, "to": 109}, {"from": 109, "to": 110}, {"from": 110, "to": 111}, {"from": 111, "to": 112}, {"from": 112, "to": 113}, {"from": 113, "to": 114}, {"from": 114, "to": 115}, {"from": 115, "to": 116}, {"from": 116, "to": 117}, {"from": 117, "to": 118}, {"from": 118, "to": 119}, {"from": 119, "to": 120}, {"from": 120, "to": 121}, {"from": 121, "to": 122}, {"from": 122, "to": 123}, {"from": 123, "to": 124}, {"from": 124, "to": 125}, {"from": 125, "to": 126}, {"from": 126, "to": 127}, {"from": 127, "to": 128}, {"from": 128, "to": 129}, {"from": 129, "to": 130}, {"from": 130, "to": 131}, {"from": 131, "to": 132}, {"from": 132, "to": 133}, {"from": 133, "to": 134}, {"from": 134, "to": 135}, {"from": 135, "to": 136}, {"from": 136, "to": 137}, {"from": 137, "to": 138}, {"from": 138, "to": 139}, {"from": 139, "to": 140}, {"from": 140, "to": 141}, {"from": 141, "to": 142}, {"from": 142, "to": 143}, {"from": 143, "to": 144}, {"from": 144, "to": 145}, {"from": 145, "to": 146}, {"from": 146, "to": 147}, {"from": 147, "to": 148}, {"from": 148, "to": 149}, {"from": 149, "to": 150}, {"from": 150, "to": 151}, {"from": 151, "to": 152}, {"from": 152, "to": 153}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

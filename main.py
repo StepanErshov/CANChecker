@@ -4,6 +4,7 @@ import logging
 import cantools.database
 import pandas as pd
 from typing import Union, List
+from pyvis.network import Network
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -46,6 +47,24 @@ def checkSignalsMessages(dfx: pd.DataFrame, dfdbc: cantools.database.can.databas
     logger.info(f"xlsx - dbc (сигналы только в Excel) = {different_signalsX}")
     logger.info(f"dbc - xlsx (сигналы только в DBC) = {different_signalsDBC}")
     
+def createGraph(dfdbc: cantools.database.can.database.Database):
+    messagesDBC = set([message.name for message in dfdbc.messages])
+    signalsDBC = set()
+    for message in dfdbc.messages:
+        signalsDBC.update(signal.name for signal in message.signals)
+
+    net = Network()
+
+    for i, message_name in enumerate(messagesDBC):
+        net.add_node(i + 1, label=message_name)
+
+    for i in range(1, len(messagesDBC)):
+        net.add_edge(i, i + 1)
+
+    return net
+
+
+
 
 
 if __name__ == "__main__":
@@ -53,4 +72,6 @@ if __name__ == "__main__":
     pathDBC =  "C:\\Users\\79245\Desktop\\Files ATOM\\CAN Matrix\\1. Body Domain\\Domain Matrix\\7.0.0\\ATOM_CAN_Matrix_BD_V7.0.0_20250208.dbc"
     dfX = read_files(pathX)
     dfDBC = read_files(pathDBC)
+    net = createGraph(dfDBC)
+    net.show("graph.html", notebook=False)
     checkSignalsMessages(dfX, dfDBC)
