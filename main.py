@@ -54,15 +54,45 @@ def createGraph(dfdbc: cantools.database.can.database.Database):
         signalsDBC.update(signal.name for signal in message.signals)
 
     net = Network()
+    
+    net.set_options("""
+    {
+        "layout": {
+            "hierarchical": {
+                "enabled": true,
+                "direction": "UD",
+                "sortMethod": "directed"
+            }
+        },
+        "physics": {
+            "hierarchicalRepulsion": {
+                "centralGravity": 0
+            },
+            "minVelocity": 0.75,
+            "solver": "hierarchicalRepulsion"
+        }
+    }
+    """)
+    
+    net.add_node(0, label="CAN Network", level=0, color="#862633", 
+                title="Root node of CAN bus messages")
+    
+    for i, message in enumerate(dfdbc.messages, start=1):
+        info = f"""
+        ID: 0x{message.frame_id:X}
+        Length: {message.length} bytes
+        Signals: {len(message.signals)}
+        """
+        net.add_node(i, 
+                    label=message.name,
+                    level=1,
+                    title=info,
+                    color="#4285F4")
 
-    for i, message_name in enumerate(messagesDBC):
-        net.add_node(i + 1, label=message_name)
-
-    for i in range(1, len(messagesDBC)):
-        net.add_edge(i, i + 1)
-
+    for i in range(1, len(dfdbc.messages)+1):
+        net.add_edge(0, i)
+    
     return net
-
 
 
 
