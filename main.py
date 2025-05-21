@@ -53,7 +53,7 @@ def createGraph(dfdbc: cantools.database.can.database.Database):
     for message in dfdbc.messages:
         signalsDBC.update(signal.name for signal in message.signals)
 
-    net = Network()
+    net = Network(height="1000px", width="100%", heading="CAN Network Visualization")
     
     net.set_options("""
     {
@@ -61,24 +61,43 @@ def createGraph(dfdbc: cantools.database.can.database.Database):
             "hierarchical": {
                 "enabled": true,
                 "direction": "UD",
-                "sortMethod": "directed"
+                "sortMethod": "directed",
+                "nodeSpacing": 400,
+                "levelSeparation": 400
             }
         },
         "physics": {
             "hierarchicalRepulsion": {
-                "centralGravity": 0
+                "centralGravity": 0,
+                "nodeDistance": 400,
+                "springLength": 400
             },
             "minVelocity": 0.75,
             "solver": "hierarchicalRepulsion"
+        },
+        "nodes": {
+            "margin": 20,
+            "font": {
+                "size": 14,
+                "face": "arial"
+            }
+        },
+        "edges": {
+            "length": 500
         }
     }
     """)
     
     net.add_node(0, label="CAN Network", level=0, color="#862633", 
-                title="Root node of CAN bus messages")
+                title="Root node of CAN bus messages", size=30)
     
     for i, message in enumerate(dfdbc.messages, start=1):
         info = f"""
+        Name message: {message.name}
+        Sender: {message.senders}
+        Recievers: {message.receivers}
+        Send type: {message.send_type}
+        Cycle type: {message.cycle_time}
         ID: 0x{message.frame_id:X}
         Length: {message.length} bytes
         Signals: {len(message.signals)}
@@ -87,10 +106,11 @@ def createGraph(dfdbc: cantools.database.can.database.Database):
                     label=message.name,
                     level=1,
                     title=info,
-                    color="#4285F4")
+                    color="#4285F4",
+                    size=10)
 
     for i in range(1, len(dfdbc.messages)+1):
-        net.add_edge(0, i)
+        net.add_edge(0, i, length=500)
     
     return net
 
