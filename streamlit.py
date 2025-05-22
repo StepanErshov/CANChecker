@@ -8,13 +8,12 @@ st.set_page_config(layout="wide", page_title="CAN Network Visualizer")
 
 def read_dbc(uploaded_file):
     """Загрузка DBC-файла из UploadedFile."""
-    # Вариант 1: Сохраняем во временный файл
     with tempfile.NamedTemporaryFile(delete=False, suffix=".dbc") as tmp:
         tmp.write(uploaded_file.getvalue())
         tmp_path = tmp.name
     
     db = cantools.database.load_file(tmp_path)
-    os.unlink(tmp_path)  # Удаляем временный файл
+    os.unlink(tmp_path)
     return db
 
 def create_graph(dfdbc: cantools.database.can.database.Database, name: str):
@@ -152,7 +151,6 @@ def main():
             html = create_graph(dbc_data, uploaded_file.name)
             st.components.v1.html(html, height=1000, scrolling=True)
 
-            # Статистика
             st.subheader("Статистика")
             col1, col2 = st.columns(2)
             col1.metric("Сообщений", len(dbc_data.messages))
