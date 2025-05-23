@@ -103,8 +103,8 @@ def main():
     path1 = "C:\\Users\\StepanErshov\\Downloads\\ATOM_CANFD_Matrix_SGW-CGW_V5.0.0_20250123.dbc"
     path = ["C:\\Users\\StepanErshov\\Downloads\\ATOM_CANFD_Matrix_SGW-CGW_V5.0.0_20250123.dbc", "C:\\Users\\StepanErshov\\Downloads\\ATOM_CANFD_Matrix_ET_V5.0.0_20250318.dbc"]
     dbc_data = read_dbc(path)
-    # dbc_nodes = getEcu(dbc_data)
-    # dbc_buses = getBus(dbc_data)
+    dbc_nodes = getEcu(dbc_data)
+    dbc_buses = getBus(dbc_data)
     messages = getMessages(dbc_data)
     signals = getSignalsDetailed(dbc_data)
     return signals
