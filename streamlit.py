@@ -146,7 +146,6 @@ def main():
     if uploaded_file:
         try:
             dbc_data = read_dbc(uploaded_file)
-            st.success("Файл успешно загружен!")
             
             html = create_graph(dbc_data, uploaded_file.name)
             st.components.v1.html(html, height=1000, scrolling=True)

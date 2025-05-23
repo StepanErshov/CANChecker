@@ -3,6 +3,8 @@ import os
 import logging
 import cantools.database
 import pandas as pd
+import pprint
+import deepdiff
 from typing import Union, List
 from pyvis.network import Network
 
@@ -14,19 +16,48 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-
 def read_files(file_pathX: Union[str, List[str]]) -> List[List]:
     if os.path.splitext(file_pathX)[1] == ".dbc":
         db = cantools.database.load_file(file_pathX)
         return db
     elif os.path.splitext(file_pathX)[1] == ".xlsx":
-        df = pd.read_excel(file_pathX, sheet_name="Matrix", keep_default_na=True)
+        if "Matrix" in pd.ExcelFile(file_pathX).sheet_names:
+            df = pd.read_excel(file_pathX, sheet_name="Matrix", keep_default_na=True)
+        else:
+            df = pd.read_excel(file_pathX, sheet_name="RouteTable", keep_default_na=False)
         return df
 
+def normalize_hex(hex_str):
+    return f"0x{int(hex_str, 16):03X}"
 
 def checkSignalsMessages(
-    dfx: pd.DataFrame, dfdbc: cantools.database.can.database.Database
+    dfx: pd.DataFrame, dfdbc: cantools.database.can.database.Database, dfRM: pd.DataFrame
 ):
+    dfRoutTable = {
+        dfRM["Unnamed: 1"].tolist()[i]: normalize_hex(dfRM["Unnamed: 2"].tolist()[i])
+        for i in range(len(dfRM["Unnamed: 2"].tolist()))
+        if dfRM["Unnamed: 1"].tolist()[i] not in ["nan", "Message Name", ""]
+    }
+    
+    dfDBC = {
+        message.name: normalize_hex(f"0x{message.frame_id:X}")
+        for message in dfdbc.messages
+    }
+
+    common_messages = set(dfDBC.keys()) & set(dfRoutTable.keys())
+
+    logger.info("===START CHECKING===")
+
+    for msg in common_messages:
+        if dfDBC[msg] != dfRoutTable[msg]:
+            logger.warning(f"ID mismatch: {msg} (DBC={dfDBC[msg]}, RouteTable={dfRoutTable[msg]})")
+
+    diff = deepdiff.DeepDiff(dfDBC, dfRoutTable)
+    for key, val in diff.items():
+        key = str(key).replace("_", " ")
+        for i in val:
+            logger.info(f"{key} : {i}")
+
     messagesX = set(dfx["Msg Name\n报文名称"].tolist()) - {"nan"}
     messagesDBC = set([message.name for message in dfdbc.messages]) - {"nan"}
 
@@ -179,8 +210,10 @@ def createGraph(dfdbc: cantools.database.can.database.Database):
 if __name__ == "__main__":
     pathX = "C:\\Users\\79245\\Desktop\\Files ATOM\\CAN Matrix\\1. Body Domain\\Domain Matrix\\7.0.0\\ATOM_CAN_Matrix_BD_V7.0.0_20250208.xlsx"
     pathDBC = "C:\\Users\\79245\\Desktop\\Files ATOM\\CAN Matrix\\1. Body Domain\\Domain Matrix\\7.0.0\\ATOM_CAN_Matrix_BD_V7.0.0_20250208.dbc"
+    pathRM = "C:\\projects\\ATOM\\CANChecker\\RoutingMAP-CGW_V5.1.0_20250417.xlsx"
     dfX = read_files(pathX)
     dfDBC = read_files(pathDBC)
-    net = createGraph(dfDBC)
-    net.show(name="graph.html", notebook=False)
-    checkSignalsMessages(dfX, dfDBC)
+    dfRM = read_files(pathRM)
+    # net = createGraph(dfDBC)
+    # net.show(name="graph.html", notebook=False)
+    checkSignalsMessages(dfX, dfDBC, dfRM)
