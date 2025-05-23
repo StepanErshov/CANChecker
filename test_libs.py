@@ -4,10 +4,10 @@ import cantools.database
 import os
 import pprint
 
-def read_dbc(file_path: Union[str, List]):
+def read_dbc(file_path: Union[str, List]) -> Union[cantools.database.can.database.Database, Dict]:
     try:
         if isinstance(file_path, str):
-            return {file_path: cantools.database.load_file(file_path)}
+            return cantools.database.load_file(file_path)
         else:
             result = {}
             for file in file_path:
@@ -22,7 +22,7 @@ def read_dbc(file_path: Union[str, List]):
     except Exception as e:
         return f"Error: {e}"
 
-def getEcu(df_dbc: Union[cantools.database.can.database.Database, Dict]):
+def getEcu(df_dbc: Union[cantools.database.can.database.Database, Dict]) -> List:
     try:
         if isinstance(df_dbc, cantools.database.can.database.Database):
             return df_dbc.nodes
@@ -34,7 +34,7 @@ def getEcu(df_dbc: Union[cantools.database.can.database.Database, Dict]):
     except Exception as e:    
         return f"Error: {e}"
 
-def getBus(df_dbc: Union[cantools.database.can.database.Database, Dict]):
+def getBus(df_dbc: Union[cantools.database.can.database.Database, Dict]) -> List:
     try:
         if isinstance(df_dbc, cantools.database.can.database.Database):
             return df_dbc.buses
@@ -61,7 +61,7 @@ def getMessages(df_dbc: Union[cantools.database.can.database.Database, Dict]):
     except Exception as e:
         return f"Error: {e}"
     
-def getSignalsDetailed(df_dbc: Union[cantools.database.can.database.Database, Dict]):
+def getSignalsDetailed(df_dbc: Union[cantools.database.can.database.Database, Dict]) -> Dict:
     try:
         def signal_to_dict(signal):
             return {
@@ -98,16 +98,41 @@ def getSignalsDetailed(df_dbc: Union[cantools.database.can.database.Database, Di
     except Exception as e:
         return f"Error: {e}"
 
+def addMessage(df_dbc: cantools.database.can.database.Database, 
+               name: str, 
+               message_id: int, 
+               length: int, 
+               signals: list = None,
+               is_extended_frame: bool = False,
+               comment: str = None):
+    try:
+        message = cantools.database.can.Message(
+            frame_id=message_id,
+            name=name,
+            length=length,
+            signals=signals if signals else [],
+            is_extended_frame=is_extended_frame,
+            comment=comment
+        )
+        if isinstance(df_dbc, cantools.database.can.database.Database):
+            df_dbc.messages.append(message)
+        
+        return df_dbc
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
 
 def main():
     path1 = "C:\\Users\\StepanErshov\\Downloads\\ATOM_CANFD_Matrix_SGW-CGW_V5.0.0_20250123.dbc"
     path = ["C:\\Users\\StepanErshov\\Downloads\\ATOM_CANFD_Matrix_SGW-CGW_V5.0.0_20250123.dbc", "C:\\Users\\StepanErshov\\Downloads\\ATOM_CANFD_Matrix_ET_V5.0.0_20250318.dbc"]
-    dbc_data = read_dbc(path)
+    dbc_data = read_dbc(path1)
     dbc_nodes = getEcu(dbc_data)
     dbc_buses = getBus(dbc_data)
     messages = getMessages(dbc_data)
     signals = getSignalsDetailed(dbc_data)
-    return signals
+    y = addMessage(dbc_data, "Hui", 0x1, 8, )
+    return y
 
 
 if __name__ == "__main__":
