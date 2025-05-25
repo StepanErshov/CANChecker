@@ -117,6 +117,10 @@ def addMessage(df_dbc: cantools.database.can.database.Database,
         if isinstance(df_dbc, cantools.database.can.database.Database):
             df_dbc.messages.append(message)
         
+        if isinstance(df_dbc, Dict):
+            for key in  df_dbc.keys():
+                df_dbc[key].messages.append(message)
+
         return df_dbc
         
     except Exception as e:
@@ -126,12 +130,12 @@ def addMessage(df_dbc: cantools.database.can.database.Database,
 def main():
     path1 = "C:\\Users\\StepanErshov\\Downloads\\ATOM_CANFD_Matrix_SGW-CGW_V5.0.0_20250123.dbc"
     path = ["C:\\Users\\StepanErshov\\Downloads\\ATOM_CANFD_Matrix_SGW-CGW_V5.0.0_20250123.dbc", "C:\\Users\\StepanErshov\\Downloads\\ATOM_CANFD_Matrix_ET_V5.0.0_20250318.dbc"]
-    dbc_data = read_dbc(path1)
+    dbc_data = read_dbc(path)
     dbc_nodes = getEcu(dbc_data)
     dbc_buses = getBus(dbc_data)
     messages = getMessages(dbc_data)
     signals = getSignalsDetailed(dbc_data)
-    y = addMessage(dbc_data, "Hui", 0x1, 8, )
+    y = addMessage(dbc_data, "Hui", 0x1, 8,)
     return y
 
 
