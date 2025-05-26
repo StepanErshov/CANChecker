@@ -3,6 +3,7 @@ import cantools
 import tempfile
 import os
 from pyvis.network import Network
+from test_libs import *
 
 st.set_page_config(layout="wide", page_title="CAN Network Visualizer")
 
@@ -142,8 +143,8 @@ def create_graph(dfdbc: cantools.database.can.database.Database, name: str):
 def main():
     st.title("📡 CAN Network Visualizer")
     uploaded_file = st.file_uploader("Выберите DBC-файл", type=".dbc")
-
-    if uploaded_file:
+    check = st.checkbox("Нужно отобразить граф?")
+    if uploaded_file and check:
         try:
             dbc_data = read_dbc(uploaded_file)
             
@@ -157,6 +158,67 @@ def main():
 
         except Exception as e:
             st.error(f"Ошибка загрузки файла: {e}")
+    
 
+    
+    with st.form("DBC_form"):
+        st.title("Добавление сообщений в файл")
+        num_messages = st.number_input("Количество сообщений", min_value=1, max_value=20, value=1)
+        
+        messages = []
+        for i in range(num_messages):
+            st.subheader(f"Сообщение {i+1}")
+            
+            cols = st.columns(5)
+            with cols[0]:
+                msg_name = st.text_input(f"Имя сообщения {i+1}", key=f"msg_name_{i}")
+            with cols[1]:
+                msg_id = st.text_input(f"ID {i+1} (hex)", key=f"msg_id_{i}")
+            with cols[2]:
+                msg_len = st.number_input(f"Длина {i+1} (байт)", min_value=1, max_value=64, value=8, key=f"msg_len_{i}")
+            with cols[3]:
+                msg_ext = st.checkbox(f"Extended {i+1}", key=f"msg_ext_{i}")
+            with cols[4]:
+                msg_comment = st.text_input(f"Комментарий {i+1}", key=f"msg_comment_{i}")
+            
+            with st.expander(f"Добавить сигналы для сообщения {i+1}"):
+                num_signals = st.number_input(f"Количество сигналов для сообщения {i+1}", min_value=0, max_value=50, value=0, key=f"num_sig_{i}")
+                
+                signals = []
+                for j in range(num_signals):
+                    st.markdown(f"**Сигнал {j+1}**")
+                    sig_cols = st.columns(5)
+                    with sig_cols[0]:
+                        sig_name = st.text_input(f"Имя сигнала {i+1}-{j+1}", key=f"sig_name_{i}_{j}")
+                    with sig_cols[1]:
+                        sig_start = st.number_input(f"Старт бит {i+1}-{j+1}", min_value=0, value=0, key=f"sig_start_{i}_{j}")
+                    with sig_cols[2]:
+                        sig_len = st.number_input(f"Длина {i+1}-{j+1} (бит)", min_value=1, value=1, key=f"sig_len_{i}_{j}")
+                    with sig_cols[3]:
+                        sig_scale = st.number_input(f"Масштаб {i+1}-{j+1}", value=1.0, key=f"sig_scale_{i}_{j}")
+                    with sig_cols[4]:
+                        sig_offset = st.number_input(f"Смещение {i+1}-{j+1}", value=0.0, key=f"sig_offset_{i}_{j}")
+                    
+                    signals.append({
+                        'name': sig_name,
+                        'start_bit': sig_start,
+                        'length': sig_len,
+                        'scale': sig_scale,
+                        'offset': sig_offset
+                    })
+            
+            messages.append({
+                'name': msg_name,
+                'id': msg_id,
+                'length': msg_len,
+                'extended': msg_ext,
+                'comment': msg_comment,
+                'signals': signals
+            })
+        
+        if st.form_submit_button("Сохранить изменения"):
+            st.success(f"Сохранено {num_messages} сообщений!")
+            st.json(messages)
+        
 if __name__ == "__main__":
     main()
