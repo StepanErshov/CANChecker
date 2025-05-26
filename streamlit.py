@@ -4,6 +4,7 @@ import tempfile
 import os
 from pyvis.network import Network
 import test_libs as tl
+import pandas as pd
 
 st.set_page_config(layout="wide", page_title="CAN Network Visualizer")
 
@@ -158,8 +159,34 @@ def main():
 
             st.subheader("Статистика")
             col1, col2 = st.columns(2)
+            
+            signals_data = []
+            for msg in dbc_data.messages:
+                for sig in msg.signals:
+                    signals_data.append({
+                        'Signal': sig.name,
+                        'Message': msg.name,
+                        'Start Bit': sig.start,
+                        'Length': sig.length
+                    })
+            
+            messages_data = []
+            for msg in dbc_data.messages:
+                messages_data.append({
+                    'Message': msg.name,
+                    'ID': f"0x{msg.frame_id:X}",
+                    'Length': msg.length,
+                    'Signals Count': len(msg.signals)
+                })
+            
+            signals_df = pd.DataFrame(signals_data)
+            messages_df = pd.DataFrame(messages_data)
+            
             col1.metric("Сообщений", len(dbc_data.messages))
-            col2.metric("Сигналов", sum(len(msg.signals) for msg in dbc_data.messages))
+            col1.dataframe(messages_df)
+            
+            col2.metric("Сигналов", signals_df.shape[0])
+            col2.dataframe(signals_df)
             
             all_msg = tl.getMessages(dbc_data)
             all_ecu = tl.getEcu(dbc_data)
