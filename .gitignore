@@ -14,7 +14,7 @@ env/
 *.swo
 *.log
 *.out
+*.html
 *.libsocketcan
 test_results/
 docs/_build/
-*.html

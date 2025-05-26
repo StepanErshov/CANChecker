@@ -25,15 +25,14 @@ def read_dbc(file_path: Union[str, List]) -> Union[cantools.database.can.databas
 def getEcu(df_dbc: Union[cantools.database.can.database.Database, Dict]) -> List:
     try:
         if isinstance(df_dbc, cantools.database.can.database.Database):
-            return df_dbc.nodes
+            return [node.name for node in df_dbc.nodes]
         else:
             lst = []
             for key, value in df_dbc.items():
-                lst.append(value.nodes)
+                lst.append([node.name for node in value.nodes])
             return lst
     except Exception as e:    
         return f"Error: {e}"
-
 def getBus(df_dbc: Union[cantools.database.can.database.Database, Dict]) -> List:
     try:
         if isinstance(df_dbc, cantools.database.can.database.Database):
@@ -46,7 +45,7 @@ def getBus(df_dbc: Union[cantools.database.can.database.Database, Dict]) -> List
     except Exception as e:    
         return f"Error: {e}"
 
-def getMessages(df_dbc: Union[cantools.database.can.database.Database, Dict]):
+def getMessages(df_dbc: Union[cantools.database.can.database.Database, Dict]) -> List:
     try:
         lst = []
         if isinstance(df_dbc, cantools.database.can.database.Database):
@@ -78,8 +77,7 @@ def getSignalsDetailed(df_dbc: Union[cantools.database.can.database.Database, Di
                 'min': signal.minimum,
                 'init': signal.raw_initial if signal.raw_initial != None else 0,
                 'invalid': signal.raw_invalid,
-                'description': signal.comment,
-                'unit': signal.unit
+                'description': signal.comment
             }
 
         if isinstance(df_dbc, cantools.database.can.database.Database):
