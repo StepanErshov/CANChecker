@@ -2,7 +2,7 @@ import cantools
 from typing import Union, List, Dict
 import cantools.database
 import os
-import datetime
+from datetime import datetime
 import pprint
 
 def read_dbc(file_path: Union[str, List]) -> Union[cantools.database.can.database.Database, Dict]:
