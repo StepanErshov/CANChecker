@@ -2,6 +2,7 @@ import cantools
 from typing import Union, List, Dict
 import cantools.database
 import os
+import datetime
 import pprint
 
 def read_dbc(file_path: Union[str, List]) -> Union[cantools.database.can.database.Database, Dict]:
@@ -103,10 +104,19 @@ def addMessage(df_dbc: cantools.database.can.database.Database,
                length: int, 
                signals: list = None,
                is_extended_frame: bool = False,
-               comment: str = None):
+               comment: str = None,
+               file_path: str = 'New_file'):
     try:
+        if isinstance(message_id, str):
+            if message_id.startswith('0x'):
+                message_id_int = int(message_id, 16)
+            else:
+                message_id_int = int(message_id)
+        else:
+            message_id_int = message_id
+        
         message = cantools.database.can.Message(
-            frame_id=message_id,
+            frame_id=message_id_int,
             name=name,
             length=length,
             signals=signals if signals else [],
@@ -119,7 +129,8 @@ def addMessage(df_dbc: cantools.database.can.database.Database,
         if isinstance(df_dbc, Dict):
             for key in  df_dbc.keys():
                 df_dbc[key].messages.append(message)
-
+        
+        cantools.database.dump_file(df_dbc, f"{file_path}.bak_{datetime.now().strftime('%Y%m%d_%H%M%S')}.dbc")
         return df_dbc
         
     except Exception as e:

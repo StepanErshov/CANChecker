@@ -7,7 +7,6 @@ import pandas as pd
 from pyvis.network import Network
 from itertools import combinations
 
-
 st.set_page_config(layout="wide", page_title="CAN Network Visualizer")
 
 def read_dbc(uploaded_files):
@@ -41,11 +40,9 @@ def create_graph(dbc_data: dict, highlight_common: bool):
     """
     )
 
-    # Collect message names per dbc
     dbc_msg_names = {}
     for name, db in dbc_data.items():
         dbc_msg_names[name] = set(msg.name for msg in db.messages)
-    # Identify common messages present in all DBCs
     if dbc_msg_names:
         common_msgs = set.intersection(*dbc_msg_names.values())
     else:
@@ -134,13 +131,8 @@ def create_graph(dbc_data: dict, highlight_common: bool):
                 net.add_edge(message_id, signal_id)
 
     if highlight_common:
-        # Add distinct edges for common messages across all DBCs
-
-
         for common_msg in common_msgs:
-            # collect node ids of this message in all DBCs
             nodes = [message_nodes[(dbc_name, common_msg)] for dbc_name in dbc_data.keys()]
-            # create edges between message nodes of different DBCs with special color
             for node1, node2 in combinations(nodes, 2):
                 net.add_edge(node1, node2, color='red', width=3, title='Common message across DBCs')
 
@@ -265,7 +257,7 @@ def main():
                     st.markdown(f"**Сигнал {j+1}**")
                     sig_cols = st.columns(14)
                     with sig_cols[0]:
-                        sig_name = st.text_input(f"Name siganl {i+1}-{j+1}", key=f"sig_name_{i}_{j}")
+                        sig_name = st.text_input(f"Name signal {i+1}-{j+1}", key=f"sig_name_{i}_{j}")
                     with sig_cols[1]:
                         sig_start = st.number_input(f"Start bit {i+1}-{j+1}", min_value=0, value=0, key=f"sig_start_{i}_{j}")
                     with sig_cols[2]:
@@ -327,10 +319,54 @@ def main():
                 'signals': signals
             })
         
-        if st.form_submit_button("Сохранить изменения"):
+        if st.form_submit_button("Сохранить локально изменения"):
             st.success(f"Сохранено {num_messages} сообщений!")
             st.json(messages)
         
+    finish = st.button('Загрузить изменения в файл')
+
+    if finish:
+        for message in messages:
+
+            for db_name, db in dbc_data.items():
+                tl.addMessage(
+                    df_dbc=db,
+                    name=message['name'],
+                    message_id=message['id'],
+                    length=message['length'],
+                    signals=message['signals'],
+                    is_extended_frame=message['extended'],
+                    comment=message['comment'],
+                    file_path="New_dbc.dbc"
+                )
+        st.success("Изменения успешно загружены в файл!")
+
+    if dbc_data:
+        st.subheader("Таблицы сообщений и сигналов по каждому DBC файлу")
+        for dbc_name, db in dbc_data.items():
+            with st.expander(f"DBC файл: {dbc_name}"):
+                messages_data = []
+                signals_data = []
+                for msg in db.messages:
+                    messages_data.append({
+                        'Message': msg.name,
+                        'ID': f"0x{msg.frame_id:X}",
+                        'Length': msg.length,
+                        'Signals Count': len(msg.signals)
+                    })
+                    for sig in msg.signals:
+                        signals_data.append({
+                            'Signal': sig.name,
+                            'Message': msg.name,
+                            'Start Bit': sig.start,
+                            'Length': sig.length
+                        })
+                messages_df = pd.DataFrame(messages_data)
+                signals_df = pd.DataFrame(signals_data)
+                st.markdown("**Сообщения:**")
+                st.dataframe(messages_df)
+                st.markdown("**Сигналы:**")
+                st.dataframe(signals_df)
+
 if __name__ == "__main__":
     main()
-
