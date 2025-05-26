@@ -28,11 +28,12 @@ def getEcu(df_dbc: Union[cantools.database.can.database.Database, Dict]) -> List
             return [node.name for node in df_dbc.nodes]
         else:
             lst = []
-            for key, value in df_dbc.items():
-                lst.append([node.name for node in value.nodes])
+            for value in df_dbc.values():
+                lst.extend([node.name for node in value.nodes])
             return lst
     except Exception as e:    
         return f"Error: {e}"
+
 def getBus(df_dbc: Union[cantools.database.can.database.Database, Dict]) -> List:
     try:
         if isinstance(df_dbc, cantools.database.can.database.Database):

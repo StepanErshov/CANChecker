@@ -2,24 +2,29 @@ import streamlit as st
 import cantools
 import tempfile
 import os
-from pyvis.network import Network
 import test_libs as tl
 import pandas as pd
+from pyvis.network import Network
+from itertools import combinations
+
 
 st.set_page_config(layout="wide", page_title="CAN Network Visualizer")
 
-def read_dbc(uploaded_file):
-    """Загрузка DBC-файла из UploadedFile."""
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".dbc") as tmp:
-        tmp.write(uploaded_file.getvalue())
-        tmp_path = tmp.name
-    
-    db = cantools.database.load_file(tmp_path)
-    os.unlink(tmp_path)
-    return db
+def read_dbc(uploaded_files):
+    """Загрузка DBC-файлов из UploadedFile."""
+    dbs = {}
+    for uploaded_file in uploaded_files:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".dbc") as tmp:
+            tmp.write(uploaded_file.getvalue())
+            tmp_path = tmp.name
+        
+        db = cantools.database.load_file(tmp_path)
+        os.unlink(tmp_path)
+        dbs[uploaded_file.name] = db
+    return dbs
 
-def create_graph(dfdbc: cantools.database.can.database.Database, name: str):
-    """Создание интерактивного графа."""
+def create_graph(dbc_data: dict, highlight_common: bool):
+    """Создание интерактивного графа для всех DBC."""
     net = Network(height="1000px", width="100%")
     net.set_options(
         """
@@ -36,82 +41,108 @@ def create_graph(dfdbc: cantools.database.can.database.Database, name: str):
     """
     )
 
-    net.add_node(
-        "CAN_Network",
-        label=name.split(".")[0],
-        level=0,
-        color="#862633",
-        title="Root node of CAN bus messages",
-        size=25,
-    )
+    # Collect message names per dbc
+    dbc_msg_names = {}
+    for name, db in dbc_data.items():
+        dbc_msg_names[name] = set(msg.name for msg in db.messages)
+    # Identify common messages present in all DBCs
+    if dbc_msg_names:
+        common_msgs = set.intersection(*dbc_msg_names.values())
+    else:
+        common_msgs = set()
 
-    message_counter = 0
-    signal_counter = 10000
+    message_nodes = {}  # {(dbc_name, msg_name): node_id}
 
-    for message in dfdbc.messages:
-        message_counter += 1
-        message_id = f"msg_{message_counter}"
-        info = f"""
-        Name message: {message.name}
-        Sender: {message.senders}
-        Recievers: {message.receivers}
-        Send type: {message.send_type}
-        Cycle type: {message.cycle_time}
-        ID: 0x{message.frame_id:X}
-        Length: {message.length} bytes
-        Signals: {len(message.signals)}
-        """
-
+    for name, db in dbc_data.items():
         net.add_node(
-            message_id,
-            label=message.name,
-            level=1,
-            title=info,
-            color="#4285F4",
-            size=15,
+            name,
+            label=name.split(".")[0],
+            level=0,
+            color="#862633",
+            title="Root node of CAN bus messages",
+            size=25,
         )
 
-        net.add_edge("CAN_Network", message_id)
+        message_counter = 0
+        signal_counter = 10000
 
-        def format_choices(choices):
-            if not choices:
-                return "None"
-            return "".join([f"0x{int(k):X}: {v} " for k, v in choices.items()])
+        for message in db.messages:
+            message_counter += 1
+            message_id = f"msg_{message_counter}_{name}"
+            message_nodes[(name, message.name)] = message_id
 
-        for signal in message.signals:
-            signal_counter += 1
-            signal_id = f"sig_{signal_counter}"
-            choices_str = format_choices(
-                signal.choices if hasattr(signal, "choices") else None
-            )
             info = f"""
-                Name signal: {signal.name}
-                Recievers: {signal.receivers}
-                Byte order: {signal.byte_order}
-                Cycle type: {message.cycle_time}
-                Start bit: {signal.start}
-                Min value: {signal.minimum}
-                Max value: {signal.maximum}
-                Signal Value Description: {choices_str}
-                Initianal value: {signal.raw_initial if signal.raw_initial != None else 0}
-                Invalid value: {signal.raw_invalid}
-                Scale: {signal.scale}
-                Offset: {signal.offset}
-                Description: {signal.comment}
-                Lenght: {signal.length} bit
-                Unit: {signal.unit}
-                """
+            Name message: {message.name}
+            Sender: {message.senders}
+            Recievers: {message.receivers}
+            Send type: {message.send_type}
+            Cycle type: {message.cycle_time}
+            ID: 0x{message.frame_id:X}
+            Length: {message.length} bytes
+            Signals: {len(message.signals)}
+            """
 
             net.add_node(
-                signal_id,
-                label=signal.name,
-                level=2,
+                message_id,
+                label=message.name,
+                level=1,
                 title=info,
-                color="#34A853",
-                size=10,
+                color="#4285F4",
+                size=15,
             )
 
-            net.add_edge(message_id, signal_id)
+            net.add_edge(name, message_id)
+
+            def format_choices(choices):
+                if not choices:
+                    return "None"
+                return "".join([f"0x{int(k):X}: {v} " for k, v in choices.items()])
+
+            for signal in message.signals:
+                signal_counter += 1
+                signal_id = f"sig_{signal_counter}_{name}"
+                choices_str = format_choices(
+                    signal.choices if hasattr(signal, "choices") else None
+                )
+                info = f"""
+                    Name signal: {signal.name}
+                    Recievers: {signal.receivers}
+                    Byte order: {signal.byte_order}
+                    Cycle type: {message.cycle_time}
+                    Start bit: {signal.start}
+                    Min value: {signal.minimum}
+                    Max value: {signal.maximum}
+                    Signal Value Description: {choices_str}
+                    Initianal value: {signal.raw_initial if signal.raw_initial != None else 0}
+                    Invalid value: {signal.raw_invalid}
+                    Scale: {signal.scale}
+                    Offset: {signal.offset}
+                    Description: {signal.comment}
+                    Lenght: {signal.length} bit
+                    Unit: {signal.unit}
+                    """
+
+                net.add_node(
+                    signal_id,
+                    label=signal.name,
+                    level=2,
+                    title=info,
+                    color="#2DAC4F",
+                    size=10,
+                )
+
+                net.add_edge(message_id, signal_id)
+
+    if highlight_common:
+        # Add distinct edges for common messages across all DBCs
+
+
+        for common_msg in common_msgs:
+            # collect node ids of this message in all DBCs
+            nodes = [message_nodes[(dbc_name, common_msg)] for dbc_name in dbc_data.keys()]
+            # create edges between message nodes of different DBCs with special color
+            for node1, node2 in combinations(nodes, 2):
+                net.add_edge(node1, node2, color='red', width=3, title='Common message across DBCs')
 
     html = net.generate_html()
 
@@ -143,46 +174,51 @@ def create_graph(dfdbc: cantools.database.can.database.Database, name: str):
 
 def main():
     st.title("📡 CAN Network Visualizer")
-    uploaded_file = st.file_uploader("Выберите DBC-файл", type=".dbc")
-    check = st.checkbox("Нужно отобразить граф?")
+    uploaded_files = st.file_uploader("Выберите DBC-файлы", type=".dbc", accept_multiple_files=True)
+    cols = st.columns(2)
+    with cols[0]:
+        check = st.checkbox("Отобразить граф")
+    with cols[1]:
+        highlight = st.checkbox("Подсвечивать общие сообщения красными связями", value=True)
     
-    dbc_data = None
+    dbc_data = {}
+    
     all_msg = []
     all_ecu = []
-    
-    if uploaded_file:
+
+    if uploaded_files:
         try:
-            dbc_data = read_dbc(uploaded_file)
+            dbc_data = read_dbc(uploaded_files)
             if check:
-                html = create_graph(dbc_data, uploaded_file.name)
+                html = create_graph(dbc_data, highlight)
                 st.components.v1.html(html, height=1000, scrolling=True)
 
             st.subheader("Статистика")
             col1, col2 = st.columns(2)
             
             signals_data = []
-            for msg in dbc_data.messages:
-                for sig in msg.signals:
-                    signals_data.append({
-                        'Signal': sig.name,
-                        'Message': msg.name,
-                        'Start Bit': sig.start,
-                        'Length': sig.length
-                    })
-            
             messages_data = []
-            for msg in dbc_data.messages:
-                messages_data.append({
-                    'Message': msg.name,
-                    'ID': f"0x{msg.frame_id:X}",
-                    'Length': msg.length,
-                    'Signals Count': len(msg.signals)
-                })
+
+            for name, db in dbc_data.items():
+                for msg in db.messages:
+                    messages_data.append({
+                        'Message': msg.name,
+                        'ID': f"0x{msg.frame_id:X}",
+                        'Length': msg.length,
+                        'Signals Count': len(msg.signals)
+                    })
+                    for sig in msg.signals:
+                        signals_data.append({
+                            'Signal': sig.name,
+                            'Message': msg.name,
+                            'Start Bit': sig.start,
+                            'Length': sig.length
+                        })
             
             signals_df = pd.DataFrame(signals_data)
             messages_df = pd.DataFrame(messages_data)
             
-            col1.metric("Сообщений", len(dbc_data.messages))
+            col1.metric("Сообщений", len(messages_df))
             col1.dataframe(messages_df)
             
             col2.metric("Сигналов", signals_df.shape[0])
@@ -193,9 +229,6 @@ def main():
 
         except Exception as e:
             st.error(f"Ошибка загрузки файла: {e}")
-
-    # all_msg = tl.getMessages(dbc_data)
-    # all_ecu = tl.getEcu(dbc_data)
 
     with st.form("DBC_form"):
         st.title("Добавление сообщений в файл")
@@ -300,3 +333,4 @@ def main():
         
 if __name__ == "__main__":
     main()
+
